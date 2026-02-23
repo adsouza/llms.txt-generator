@@ -1,7 +1,5 @@
 package domain
 
-import "context"
-
 // Page represents a single web page discovered during crawling.
 type Page struct {
 	URL         string
@@ -32,16 +30,4 @@ type ProgressEvent struct {
 	Total      int      // total pages to fetch, for "progress"
 	Result     string   // populated for "done"
 	Error      string   // populated for "error"
-}
-
-// Crawler discovers pages on a website.
-type Crawler interface {
-	Crawl(ctx context.Context, siteURL string) ([]Page, error)
-	Discover(ctx context.Context, siteURL string) ([]string, error)
-	FetchPage(ctx context.Context, pageURL string) (Page, error)
-}
-
-// Formatter renders a Site into llms.txt content.
-type Formatter interface {
-	Format(site Site) string
 }

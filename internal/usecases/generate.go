@@ -14,10 +14,22 @@ type Generator interface {
 	Generate(ctx context.Context, siteURL string) (string, error)
 }
 
+// Crawler discovers pages on a website.
+type Crawler interface {
+	Crawl(ctx context.Context, siteURL string) ([]domain.Page, error)
+	Discover(ctx context.Context, siteURL string) ([]string, error)
+	FetchPage(ctx context.Context, pageURL string) (domain.Page, error)
+}
+
+// Formatter renders a Site into llms.txt content.
+type Formatter interface {
+	Format(site domain.Site) string
+}
+
 // Service implements Generator by crawling a site and formatting the results.
 type Service struct {
-	Crawler   domain.Crawler
-	Formatter domain.Formatter
+	Crawler   Crawler
+	Formatter Formatter
 }
 
 // Generate crawls the given site URL and returns formatted llms.txt content.

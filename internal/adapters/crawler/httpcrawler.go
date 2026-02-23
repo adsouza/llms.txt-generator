@@ -24,7 +24,7 @@ const (
 	userAgent      = "llms-txt-generator/1.0"
 )
 
-// HTTPCrawler implements domain.Crawler by fetching pages over HTTP.
+// HTTPCrawler implements usecases.Crawler by fetching pages over HTTP.
 type HTTPCrawler struct {
 	Client *http.Client
 }

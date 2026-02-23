@@ -1,6 +1,6 @@
 # Architecture
 
-This project follows Clean Architecture with four layers enforced by go-arch-lint.
+This project follows Clean Architecture with four layers enforced by `go-arch-lint`.
 
 ## Layers
 
@@ -11,7 +11,7 @@ internal/frameworks/ ← HTTP server, Huma API setup, static files
     ↓
 internal/adapters/   ← Crawler, Formatter, HTTP handler implementations
     ↓
-internal/usecases/   ← Generate use case (crawl → group → format)
+internal/usecases/   ← Generate use-case (crawl → group → format)
     ↓
 internal/domain/     ← Page, Section, Site, ProgressEvent entities
 ```
@@ -22,7 +22,7 @@ internal/domain/     ← Page, Section, Site, ProgressEvent entities
 
 | Package                | Responsibility                                                        |
 |------------------------|-----------------------------------------------------------------------|
-| `domain`               | Core entities (`Page`, `Section`, `Site`, `ProgressEvent`)            |
+| `domain`               | Core entities: `Page`, `Section`, `Site`, `ProgressEvent`             |
 | `usecases`             | Interfaces & `Service` that orchestrates crawl → group → format       |
 | `adapters/crawler`     | `HTTPCrawler` — sitemap/BFS crawling, robots.txt, metadata extraction |
 | `adapters/formatter`   | `LlmsTxt` — renders `Site` into llms.txt markdown                     |
@@ -50,4 +50,5 @@ Svelte 5 + Vite single-page app in `frontend/`. Built output goes to `static/bui
 
 ## Page Grouping
 
-Pages are grouped by first URL path segment, mapped to human-readable section names (e.g. `docs` → "Documentation"). If more than 5 sections, the smallest are moved to the llms.txt "Optional" section.
+Pages are grouped by first URL path segment, mapped to human-readable section names (e.g. `docs` → "Documentation").
+If more than 5 sections, the smallest are moved to the llms.txt "Optional" section.

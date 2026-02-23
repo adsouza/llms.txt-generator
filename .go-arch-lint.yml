@@ -3,6 +3,21 @@ workdir: internal
 allow:
   deepScan: true
 
+excludeFiles:
+  - "^.*_test\\.go$"
+  - "^.*\/test\/.*$"
+
+vendors:
+  huma:
+    {
+      in:
+        [
+          github.com/danielgtaylor/huma/v2,
+          github.com/danielgtaylor/huma/v2/adapters/humago,
+        ],
+    }
+  net: { in: golang.org/x/net/html }
+
 components:
   domain: { in: domain }
   usecase: { in: usecases }
@@ -19,6 +34,11 @@ deps:
   adapter:
     mayDependOn:
       - usecase
+    canUse:
+      - huma
+      - net
   infra:
     mayDependOn:
       - adapter
+    canUse:
+      - huma

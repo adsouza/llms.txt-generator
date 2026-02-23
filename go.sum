@@ -1,0 +1,4 @@
+github.com/danielgtaylor/huma/v2 v2.37.2 h1:Nf9vjy2sxBJFaupPlthXL/Hy2+LurfVbaKHmCMEI7xE=
+github.com/danielgtaylor/huma/v2 v2.37.2/go.mod h1:95S04G/lExFRYlBkKaBaZm9lVmxRmqX9f2CgoOZ11AM=
+golang.org/x/net v0.50.0 h1:ucWh9eiCGyDR3vtzso0WMQinm2Dnt8cFMuQa9K33J60=
+golang.org/x/net v0.50.0/go.mod h1:UgoSli3F/pBgdJBHCTc+tp3gmrU4XswgGRgtnwWTfyM=

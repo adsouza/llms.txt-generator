@@ -164,3 +164,58 @@ func TestCrawl_InvalidURL(t *testing.T) {
 		t.Fatal("expected error for ftp scheme, got nil")
 	}
 }
+
+func TestDiscover_ReturnsSitemapURLs(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	mux.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/xml")
+		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>BASEURL/</loc></url>
+  <url><loc>BASEURL/about</loc></url>
+</urlset>`)
+	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `<html><head><title>Home</title></head></html>`)
+	})
+	mux.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `<html><head><title>About</title></head></html>`)
+	})
+
+	ts := newTestSite(mux)
+	defer ts.Close()
+
+	c := &HTTPCrawler{Client: ts.Client()}
+	urls, err := c.Discover(context.Background(), ts.URL)
+	if err != nil {
+		t.Fatalf("Discover() error: %v", err)
+	}
+	if len(urls) != 2 {
+		t.Fatalf("got %d URLs, want 2", len(urls))
+	}
+}
+
+func TestFetchPage_ExtractsMetadata(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `<html><head><title>Test Page</title><meta name="description" content="A test page"></head></html>`)
+	})
+
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	c := &HTTPCrawler{Client: ts.Client()}
+	page, err := c.FetchPage(context.Background(), ts.URL+"/test")
+	if err != nil {
+		t.Fatalf("FetchPage() error: %v", err)
+	}
+	if page.Title != "Test Page" {
+		t.Errorf("title = %q, want %q", page.Title, "Test Page")
+	}
+	if page.Description != "A test page" {
+		t.Errorf("description = %q, want %q", page.Description, "A test page")
+	}
+}

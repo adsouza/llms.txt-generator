@@ -22,6 +22,7 @@ func NewServer(handler *httphandler.Handler, staticFS fs.FS) http.Handler {
 	config := huma.DefaultConfig("llms.txt Generator", "1.0.0")
 	api := humago.New(mux, config)
 	handler.Register(api)
+	handler.RegisterSSE(mux)
 
 	// Serve the embedded frontend for all non-API routes.
 	mux.Handle("/", http.FileServerFS(staticFS))

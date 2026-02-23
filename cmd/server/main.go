@@ -23,7 +23,7 @@ func main() {
 	crawl := &crawler.HTTPCrawler{Client: &http.Client{}}
 	fmt := formatter.LlmsTxt{}
 	svc := &usecases.Service{Crawler: crawl, Formatter: fmt}
-	handler := httphandler.New(svc, 5)
+	handler := httphandler.New(svc, svc, 5)
 
 	frontendFS, err := fs.Sub(static.Frontend, "build")
 	if err != nil {

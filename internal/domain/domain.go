@@ -23,9 +23,22 @@ type Site struct {
 	Optional    []Page // secondary links for the llms.txt "Optional" section
 }
 
+// ProgressEvent represents a streaming event during generation.
+type ProgressEvent struct {
+	Type       string   // "discovered", "progress", "done", "error"
+	URLs       []string // populated for "discovered"
+	CurrentURL string   // populated for "progress"
+	Done       int      // pages fetched so far, for "progress"
+	Total      int      // total pages to fetch, for "progress"
+	Result     string   // populated for "done"
+	Error      string   // populated for "error"
+}
+
 // Crawler discovers pages on a website.
 type Crawler interface {
 	Crawl(ctx context.Context, siteURL string) ([]Page, error)
+	Discover(ctx context.Context, siteURL string) ([]string, error)
+	FetchPage(ctx context.Context, pageURL string) (Page, error)
 }
 
 // Formatter renders a Site into llms.txt content.

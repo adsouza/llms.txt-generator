@@ -10,11 +10,35 @@ import (
 
 type fakeCrawler struct {
 	pages []domain.Page
+	urls  []string
 	err   error
 }
 
 func (f *fakeCrawler) Crawl(_ context.Context, _ string) ([]domain.Page, error) {
 	return f.pages, f.err
+}
+
+func (f *fakeCrawler) Discover(_ context.Context, _ string) ([]string, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	if f.urls != nil {
+		return f.urls, nil
+	}
+	urls := make([]string, len(f.pages))
+	for i, p := range f.pages {
+		urls[i] = p.URL
+	}
+	return urls, nil
+}
+
+func (f *fakeCrawler) FetchPage(_ context.Context, pageURL string) (domain.Page, error) {
+	for _, p := range f.pages {
+		if p.URL == pageURL {
+			return p, nil
+		}
+	}
+	return domain.Page{URL: pageURL}, nil
 }
 
 type fakeFormatter struct {
@@ -178,5 +202,60 @@ func TestGroupPages_SortedSections(t *testing.T) {
 				t.Errorf("pages in Blog not sorted: %q > %q", sec.Pages[0].Title, sec.Pages[1].Title)
 			}
 		}
+	}
+}
+
+func TestGenerateStream_EventOrder(t *testing.T) {
+	crawler := &fakeCrawler{pages: []domain.Page{
+		{URL: "https://example.com/", Title: "Home", Description: "Welcome"},
+		{URL: "https://example.com/docs/intro", Title: "Intro"},
+	}}
+	formatter := &fakeFormatter{}
+	svc := &Service{Crawler: crawler, Formatter: formatter}
+
+	events := make(chan domain.ProgressEvent, 10)
+	svc.GenerateStream(context.Background(), "https://example.com", events)
+
+	var collected []domain.ProgressEvent
+	for ev := range events {
+		collected = append(collected, ev)
+	}
+
+	if len(collected) < 3 {
+		t.Fatalf("got %d events, want at least 3 (discovered + progress + done)", len(collected))
+	}
+	if collected[0].Type != "discovered" {
+		t.Errorf("first event type = %q, want %q", collected[0].Type, "discovered")
+	}
+	if len(collected[0].URLs) != 2 {
+		t.Errorf("discovered URLs = %d, want 2", len(collected[0].URLs))
+	}
+	last := collected[len(collected)-1]
+	if last.Type != "done" {
+		t.Errorf("last event type = %q, want %q", last.Type, "done")
+	}
+	if last.Result != "formatted" {
+		t.Errorf("result = %q, want %q", last.Result, "formatted")
+	}
+}
+
+func TestGenerateStream_DiscoverError(t *testing.T) {
+	crawler := &fakeCrawler{err: errors.New("network error")}
+	formatter := &fakeFormatter{}
+	svc := &Service{Crawler: crawler, Formatter: formatter}
+
+	events := make(chan domain.ProgressEvent, 10)
+	svc.GenerateStream(context.Background(), "https://example.com", events)
+
+	var collected []domain.ProgressEvent
+	for ev := range events {
+		collected = append(collected, ev)
+	}
+
+	if len(collected) != 1 {
+		t.Fatalf("got %d events, want 1 (error)", len(collected))
+	}
+	if collected[0].Type != "error" {
+		t.Errorf("event type = %q, want %q", collected[0].Type, "error")
 	}
 }

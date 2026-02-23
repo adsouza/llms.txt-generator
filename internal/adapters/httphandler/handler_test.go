@@ -22,7 +22,7 @@ func (f *fakeGenerator) Generate(_ context.Context, _ string) (string, error) {
 
 func TestHandleGenerate_Success(t *testing.T) {
 	gen := &fakeGenerator{result: "# Test Site\n"}
-	h := New(gen, 5)
+	h := New(gen, nil, 5)
 
 	_, api := humatest.New(t)
 	h.Register(api)
@@ -45,7 +45,7 @@ func TestHandleGenerate_Success(t *testing.T) {
 
 func TestHandleGenerate_InvalidURL(t *testing.T) {
 	gen := &fakeGenerator{}
-	h := New(gen, 5)
+	h := New(gen, nil, 5)
 
 	_, api := humatest.New(t)
 	h.Register(api)
@@ -58,7 +58,7 @@ func TestHandleGenerate_InvalidURL(t *testing.T) {
 
 func TestHandleGenerate_EmptyURL(t *testing.T) {
 	gen := &fakeGenerator{}
-	h := New(gen, 5)
+	h := New(gen, nil, 5)
 
 	_, api := humatest.New(t)
 	h.Register(api)
@@ -71,7 +71,7 @@ func TestHandleGenerate_EmptyURL(t *testing.T) {
 
 func TestHandleGenerate_GeneratorError(t *testing.T) {
 	gen := &fakeGenerator{err: errors.New("crawl failed")}
-	h := New(gen, 5)
+	h := New(gen, nil, 5)
 
 	_, api := humatest.New(t)
 	h.Register(api)

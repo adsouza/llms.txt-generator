@@ -2,11 +2,14 @@ package httphandler
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/danielgtaylor/huma/v2"
 
+	"github.com/adsouza/llms.txt-generator/internal/domain"
 	"github.com/adsouza/llms.txt-generator/internal/usecases"
 )
 
@@ -24,17 +27,24 @@ type GenerateOutput struct {
 	}
 }
 
+// StreamGenerator can generate llms.txt with progress events.
+type StreamGenerator interface {
+	GenerateStream(ctx context.Context, siteURL string, events chan<- domain.ProgressEvent)
+}
+
 // Handler adapts HTTP requests to the usecases.Generator.
 type Handler struct {
-	Generator usecases.Generator
-	sem       chan struct{}
+	Generator       usecases.Generator
+	StreamGenerator StreamGenerator
+	sem             chan struct{}
 }
 
 // New creates a Handler with the given generator and max concurrent crawls.
-func New(gen usecases.Generator, maxConcurrent int) *Handler {
+func New(gen usecases.Generator, streamGen StreamGenerator, maxConcurrent int) *Handler {
 	return &Handler{
-		Generator: gen,
-		sem:       make(chan struct{}, maxConcurrent),
+		Generator:       gen,
+		StreamGenerator: streamGen,
+		sem:             make(chan struct{}, maxConcurrent),
 	}
 }
 
@@ -47,6 +57,11 @@ func (h *Handler) Register(api huma.API) {
 		Summary:     "Generate llms.txt for a website",
 		Tags:        []string{"Generator"},
 	}, h.handleGenerate)
+}
+
+// RegisterSSE registers the SSE streaming endpoint on the given mux.
+func (h *Handler) RegisterSSE(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/generate-stream", h.handleGenerateStream)
 }
 
 func (h *Handler) handleGenerate(ctx context.Context, input *GenerateInput) (*GenerateOutput, error) {
@@ -72,4 +87,47 @@ func (h *Handler) handleGenerate(ctx context.Context, input *GenerateInput) (*Ge
 	out := &GenerateOutput{}
 	out.Body.LlmsTxt = result
 	return out, nil
+}
+
+func (h *Handler) handleGenerateStream(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
+		return
+	}
+
+	parsed, err := url.Parse(body.URL)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		http.Error(w, `{"error":"invalid URL: must be a valid http or https URL"}`, http.StatusBadRequest)
+		return
+	}
+
+	select {
+	case h.sem <- struct{}{}:
+		defer func() { <-h.sem }()
+	case <-r.Context().Done():
+		http.Error(w, `{"error":"request cancelled"}`, http.StatusServiceUnavailable)
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, `{"error":"streaming not supported"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	events := make(chan domain.ProgressEvent, 10)
+	go h.StreamGenerator.GenerateStream(r.Context(), body.URL, events)
+
+	for ev := range events {
+		data, _ := json.Marshal(ev)
+		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.Type, data)
+		flusher.Flush()
+	}
 }

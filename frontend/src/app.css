@@ -136,3 +136,66 @@ button.secondary:hover {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+.crawl-progress {
+  margin-top: 1rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.progress-count {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.progress-bar-track {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.current-url {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-list {
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.url-item {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.url-item:last-child {
+  border-bottom: none;
+}

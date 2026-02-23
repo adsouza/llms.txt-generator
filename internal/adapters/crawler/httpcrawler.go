@@ -52,7 +52,8 @@ type sitemapSitemap struct {
 	Loc string `xml:"loc"`
 }
 
-func (c *HTTPCrawler) Crawl(ctx context.Context, siteURL string) ([]domain.Page, error) {
+// Discover returns the list of page URLs found on a site without fetching their metadata.
+func (c *HTTPCrawler) Discover(ctx context.Context, siteURL string) ([]string, error) {
 	parsed, err := url.Parse(siteURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
@@ -65,7 +66,6 @@ func (c *HTTPCrawler) Crawl(ctx context.Context, siteURL string) ([]domain.Page,
 	}
 
 	baseURL := fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host)
-
 	robots := c.fetchRobots(ctx, baseURL)
 
 	urls := c.discoverViaSitemap(ctx, baseURL, robots)
@@ -73,14 +73,32 @@ func (c *HTTPCrawler) Crawl(ctx context.Context, siteURL string) ([]domain.Page,
 		urls = c.discoverViaBFS(ctx, baseURL, parsed.Host, robots)
 	}
 
-	var pages []domain.Page
+	// Filter disallowed URLs and cap.
+	var filtered []string
 	for _, u := range urls {
-		if len(pages) >= maxPages {
+		if len(filtered) >= maxPages {
 			break
 		}
-		if c.isDisallowed(u, robots) {
-			continue
+		if !c.isDisallowed(u, robots) {
+			filtered = append(filtered, u)
 		}
+	}
+	return filtered, nil
+}
+
+// FetchPage retrieves a single page and extracts its title and meta description.
+func (c *HTTPCrawler) FetchPage(ctx context.Context, pageURL string) (domain.Page, error) {
+	return c.fetchPage(ctx, pageURL)
+}
+
+func (c *HTTPCrawler) Crawl(ctx context.Context, siteURL string) ([]domain.Page, error) {
+	urls, err := c.Discover(ctx, siteURL)
+	if err != nil {
+		return nil, err
+	}
+
+	var pages []domain.Page
+	for _, u := range urls {
 		page, err := c.fetchPage(ctx, u)
 		if err != nil {
 			continue

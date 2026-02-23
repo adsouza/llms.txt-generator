@@ -1,32 +1,64 @@
 <script>
-  import { generateLlmsTxt } from './lib/api.js';
+  import { generateLlmsTxtStream } from './lib/api.js';
 
   let state = $state('idle');
   let result = $state('');
   let errorMsg = $state('');
   let url = $state('');
   let copied = $state(false);
+  let discoveredURLs = $state([]);
+  let crawlDone = $state(0);
+  let crawlTotal = $state(0);
+  let currentURL = $state('');
+  let cancelStream = null;
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     if (!url.trim()) return;
-    state = 'loading';
+    state = 'discovering';
     errorMsg = '';
-    try {
-      result = await generateLlmsTxt(url.trim());
-      state = 'result';
-    } catch (err) {
-      errorMsg = err.message;
-      state = 'error';
-    }
+    result = '';
+    discoveredURLs = [];
+    crawlDone = 0;
+    crawlTotal = 0;
+    currentURL = '';
+
+    cancelStream = generateLlmsTxtStream(url.trim(), {
+      onDiscovered(urls, total) {
+        discoveredURLs = urls;
+        crawlTotal = total;
+        state = 'crawling';
+      },
+      onProgress(pageURL, done, total) {
+        currentURL = pageURL;
+        crawlDone = done;
+        crawlTotal = total;
+      },
+      onDone(llmsTxt) {
+        result = llmsTxt;
+        state = 'result';
+        cancelStream = null;
+      },
+      onError(msg) {
+        errorMsg = msg;
+        state = 'error';
+        cancelStream = null;
+      },
+    });
   }
 
   function handleReset() {
+    if (cancelStream) cancelStream();
     state = 'idle';
     result = '';
     errorMsg = '';
     url = '';
     copied = false;
+    discoveredURLs = [];
+    crawlDone = 0;
+    crawlTotal = 0;
+    currentURL = '';
+    cancelStream = null;
   }
 
   function copyToClipboard() {
@@ -59,7 +91,6 @@
             bind:value={url}
             placeholder="https://example.com"
             required
-            autofocus
           />
           <button type="submit">Generate</button>
         </div>
@@ -68,11 +99,29 @@
         <div class="error">{errorMsg}</div>
       {/if}
 
-    {:else if state === 'loading'}
+    {:else if state === 'discovering'}
       <div class="loading">
         <div class="spinner"></div>
-        <p>Crawling site and generating llms.txt...</p>
-        <p class="loading-detail">This may take a moment depending on the site size.</p>
+        <p>Discovering pages...</p>
+      </div>
+
+    {:else if state === 'crawling'}
+      <div class="crawl-progress">
+        <div class="progress-header">
+          <p>Found <strong>{crawlTotal}</strong> pages to crawl</p>
+          <p class="progress-count">Fetching page {crawlDone} of {crawlTotal}</p>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width: {crawlTotal ? (crawlDone / crawlTotal * 100) : 0}%"></div>
+        </div>
+        {#if currentURL}
+          <p class="current-url">{currentURL}</p>
+        {/if}
+        <div class="url-list">
+          {#each discoveredURLs as pageURL}
+            <div class="url-item">{pageURL}</div>
+          {/each}
+        </div>
       </div>
 
     {:else if state === 'result'}

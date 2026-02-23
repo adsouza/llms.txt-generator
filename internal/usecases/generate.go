@@ -30,6 +30,39 @@ func (s *Service) Generate(ctx context.Context, siteURL string) (string, error) 
 	return s.Formatter.Format(site), nil
 }
 
+// GenerateStream discovers pages, fetches metadata, and sends progress events to the channel.
+// The channel is closed when the function returns.
+func (s *Service) GenerateStream(ctx context.Context, siteURL string, events chan<- domain.ProgressEvent) {
+	defer close(events)
+
+	urls, err := s.Crawler.Discover(ctx, siteURL)
+	if err != nil {
+		events <- domain.ProgressEvent{Type: "error", Error: err.Error()}
+		return
+	}
+
+	events <- domain.ProgressEvent{Type: "discovered", URLs: urls, Total: len(urls)}
+
+	var pages []domain.Page
+	for i, u := range urls {
+		page, err := s.Crawler.FetchPage(ctx, u)
+		if err != nil {
+			continue
+		}
+		pages = append(pages, page)
+		events <- domain.ProgressEvent{
+			Type:       "progress",
+			CurrentURL: u,
+			Done:       i + 1,
+			Total:      len(urls),
+		}
+	}
+
+	site := groupPages(siteURL, pages)
+	result := s.Formatter.Format(site)
+	events <- domain.ProgressEvent{Type: "done", Result: result}
+}
+
 var sectionNames = map[string]string{
 	"docs":          "Documentation",
 	"documentation": "Documentation",

@@ -4,31 +4,31 @@ This project follows Clean Architecture with four layers enforced by go-arch-lin
 
 ## Layers
 
-```
-cmd/server/main.go          ← Composition root (wires all layers)
+```sh
+cmd/server/main.go   ← Composition root (wires all layers)
     ↓
-internal/frameworks/         ← HTTP server, Huma API setup, static files
+internal/frameworks/ ← HTTP server, Huma API setup, static files
     ↓
-internal/adapters/           ← Crawler, Formatter, HTTP handler
+internal/adapters/   ← Crawler, Formatter, HTTP handler implementations
     ↓
-internal/usecases/           ← Generate use case (crawl → group → format)
+internal/usecases/   ← Generate use case (crawl → group → format)
     ↓
-internal/domain/             ← Page, Section, Site entities; Crawler, Formatter interfaces
+internal/domain/     ← Page, Section, Site, ProgressEvent entities
 ```
 
 **Dependency rule**: each layer may only depend on the layer below it. Domain is accessible to all layers.
 
 ## Packages
 
-| Package | Responsibility |
-|---------|---------------|
-| `domain` | Core entities (`Page`, `Section`, `Site`) and interfaces (`Crawler`, `Formatter`) |
-| `usecases` | `Generator` interface and `Service` that orchestrates crawl → group → format |
-| `adapters/crawler` | `HTTPCrawler` — sitemap/BFS crawling, robots.txt, metadata extraction |
-| `adapters/formatter` | `LlmsTxt` — renders `Site` into llms.txt markdown |
-| `adapters/httphandler` | Huma API handler for `POST /api/generate` with Problem JSON errors |
-| `frameworks` | Server setup combining Huma API with embedded static file serving |
-| `static` | Embeds the built Svelte frontend via `go:embed` |
+| Package                | Responsibility                                                        |
+|------------------------|-----------------------------------------------------------------------|
+| `domain`               | Core entities (`Page`, `Section`, `Site`, `ProgressEvent`)            |
+| `usecases`             | Interfaces & `Service` that orchestrates crawl → group → format       |
+| `adapters/crawler`     | `HTTPCrawler` — sitemap/BFS crawling, robots.txt, metadata extraction |
+| `adapters/formatter`   | `LlmsTxt` — renders `Site` into llms.txt markdown                     |
+| `adapters/httphandler` | Huma API handler for `POST /api/generate` with Problem JSON errors    |
+| `frameworks`           | Server setup combining Huma API with embedded static file serving     |
+| `static`               | Embeds the built Svelte frontend via `go:embed`                       |
 
 ## API
 

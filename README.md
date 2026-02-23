@@ -2,6 +2,8 @@
 
 A web application that automatically generates an [llms.txt](https://llmstxt.org) file for a given website by analyzing its structure and content.
 
+![llms.txt Generator UI](docs/llms-txt-gen-screenshot.png)
+
 ## Quick Start
 
 Prerequisites: Go 1.25+, Node.js 20+

@@ -115,7 +115,7 @@ func (c *HTTPCrawler) fetchRobots(ctx context.Context, baseURL string) robotsRes
 	if err != nil {
 		return result
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	scanner := bufio.NewScanner(body)
 	inWildcard := false
@@ -178,7 +178,7 @@ func (c *HTTPCrawler) parseSitemap(ctx context.Context, sitemapURL string) []str
 	if err != nil {
 		return nil
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	data, err := io.ReadAll(body)
 	if err != nil {
@@ -252,7 +252,7 @@ func (c *HTTPCrawler) extractLinks(ctx context.Context, pageURL, host string) []
 	if err != nil {
 		return nil
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	base, _ := url.Parse(pageURL)
 	var links []string
@@ -296,7 +296,7 @@ func (c *HTTPCrawler) fetchPage(ctx context.Context, pageURL string) (domain.Pag
 	if err != nil {
 		return domain.Page{}, err
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	page := domain.Page{URL: pageURL}
 
@@ -364,7 +364,7 @@ func (c *HTTPCrawler) get(ctx context.Context, rawURL string) (io.ReadCloser, er
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		cancel()
 		return nil, fmt.Errorf("HTTP %d for %s", resp.StatusCode, rawURL)
 	}

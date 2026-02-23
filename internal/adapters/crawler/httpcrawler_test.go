@@ -21,7 +21,7 @@ func newTestSite(handler http.Handler) *httptest.Server {
 		}
 		w.WriteHeader(rec.Code)
 		body := strings.ReplaceAll(rec.Body.String(), "BASEURL", ts.URL)
-		fmt.Fprint(w, body)
+		_, _ = fmt.Fprint(w, body)
 	}))
 	return ts
 }
@@ -29,12 +29,12 @@ func newTestSite(handler http.Handler) *httptest.Server {
 func TestCrawl_WithSitemap(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "User-agent: *")
-		fmt.Fprintln(w, "Sitemap: BASEURL/sitemap.xml")
+		_, _ = fmt.Fprintln(w, "User-agent: *")
+		_, _ = fmt.Fprintln(w, "Sitemap: BASEURL/sitemap.xml")
 	})
 	mux.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+		_, _ = fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>BASEURL/</loc></url>
   <url><loc>BASEURL/docs/intro</loc></url>
@@ -42,13 +42,13 @@ func TestCrawl_WithSitemap(t *testing.T) {
 </urlset>`)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Test Site</title><meta name="description" content="A test site"></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Test Site</title><meta name="description" content="A test site"></head></html>`)
 	})
 	mux.HandleFunc("/docs/intro", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Introduction</title><meta name="description" content="Getting started"></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Introduction</title><meta name="description" content="Getting started"></head></html>`)
 	})
 	mux.HandleFunc("/blog/post1", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>First Post</title><meta name="description" content="Hello world"></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>First Post</title><meta name="description" content="Hello world"></head></html>`)
 	})
 
 	ts := newTestSite(mux)
@@ -83,13 +83,13 @@ func TestCrawl_BFSFallback(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Home</title></head><body><a href="/about">About</a><a href="/docs/intro">Docs</a></body></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Home</title></head><body><a href="/about">About</a><a href="/docs/intro">Docs</a></body></html>`)
 	})
 	mux.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>About Us</title><meta name="description" content="About page"></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>About Us</title><meta name="description" content="About page"></head></html>`)
 	})
 	mux.HandleFunc("/docs/intro", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Docs Intro</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Docs Intro</title></head></html>`)
 	})
 
 	ts := newTestSite(mux)
@@ -116,12 +116,12 @@ func TestCrawl_BFSFallback(t *testing.T) {
 func TestCrawl_RobotsDisallow(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "User-agent: *")
-		fmt.Fprintln(w, "Disallow: /private")
+		_, _ = fmt.Fprintln(w, "User-agent: *")
+		_, _ = fmt.Fprintln(w, "Disallow: /private")
 	})
 	mux.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+		_, _ = fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>BASEURL/</loc></url>
   <url><loc>BASEURL/public</loc></url>
@@ -129,13 +129,13 @@ func TestCrawl_RobotsDisallow(t *testing.T) {
 </urlset>`)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Home</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Home</title></head></html>`)
 	})
 	mux.HandleFunc("/public", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Public</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Public</title></head></html>`)
 	})
 	mux.HandleFunc("/private/secret", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Secret</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Secret</title></head></html>`)
 	})
 
 	ts := newTestSite(mux)
@@ -172,17 +172,17 @@ func TestDiscover_ReturnsSitemapURLs(t *testing.T) {
 	})
 	mux.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+		_, _ = fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>BASEURL/</loc></url>
   <url><loc>BASEURL/about</loc></url>
 </urlset>`)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Home</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Home</title></head></html>`)
 	})
 	mux.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>About</title></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>About</title></head></html>`)
 	})
 
 	ts := newTestSite(mux)
@@ -201,7 +201,7 @@ func TestDiscover_ReturnsSitemapURLs(t *testing.T) {
 func TestFetchPage_ExtractsMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><head><title>Test Page</title><meta name="description" content="A test page"></head></html>`)
+		_, _ = fmt.Fprint(w, `<html><head><title>Test Page</title><meta name="description" content="A test page"></head></html>`)
 	})
 
 	ts := httptest.NewServer(mux)

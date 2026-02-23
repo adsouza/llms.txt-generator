@@ -1,0 +1,11 @@
+version: "2"
+formatters:
+  enable:
+    - goimports
+linters:
+  enable:
+    - staticcheck
+    - errcheck
+    - bodyclose
+    - gocritic
+    - misspell

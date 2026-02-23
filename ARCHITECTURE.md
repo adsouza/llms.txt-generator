@@ -34,7 +34,7 @@ internal/domain/     ← Page, Section, Site, ProgressEvent entities
 
 `POST /api/generate` — accepts `{"url": "https://example.com"}`, returns `{"llms_txt": "..."}`.
 
-Errors use RFC 9457 Problem JSON via Huma 2.
+Errors use [RFC 9457 Problem JSON](https://www.rfc-editor.org/rfc/rfc9457.html) via Huma 2.
 
 ## Frontend
 

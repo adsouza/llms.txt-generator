@@ -14,7 +14,7 @@ cd frontend && npm ci && npm run build && cd ..
 go run ./cmd/server
 ```
 
-Visit http://localhost:8080, enter a website URL, and click Generate.
+Visit <http://localhost:8080>, enter a website URL, and click Generate.
 
 ## Development
 

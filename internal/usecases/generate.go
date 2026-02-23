@@ -75,31 +75,6 @@ func (s *Service) GenerateStream(ctx context.Context, siteURL string, events cha
 	events <- domain.ProgressEvent{Type: "done", Result: result}
 }
 
-var sectionNames = map[string]string{
-	"docs":          "Documentation",
-	"documentation": "Documentation",
-	"blog":          "Blog",
-	"posts":         "Blog",
-	"articles":      "Blog",
-	"news":          "Blog",
-	"api":           "API Reference",
-	"guides":        "Guides",
-	"tutorials":     "Guides",
-	"learn":         "Guides",
-	"about":         "About",
-	"team":          "About",
-	"contact":       "About",
-	"company":       "About",
-	"changelog":     "Changelog",
-	"releases":      "Changelog",
-	"updates":       "Changelog",
-	"pricing":       "Pricing",
-	"plans":         "Pricing",
-	"help":          "Support",
-	"support":       "Support",
-	"faq":           "Support",
-}
-
 func groupPages(siteURL string, pages []domain.Page) domain.Site {
 	var site domain.Site
 
@@ -181,4 +156,55 @@ func groupPages(siteURL string, pages []domain.Page) domain.Site {
 
 	site.Sections = sections
 	return site
+}
+
+var sectionNames = map[string]string{
+	"docs":            "Documentation",
+	"documentation":   "Documentation",
+	"blog":            "Blog",
+	"posts":           "Blog",
+	"articles":        "Blog",
+	"news":            "Blog",
+	"api":             "Reference",
+	"reference":       "Reference",
+	"ref":             "Reference",
+	"guides":          "Guides",
+	"tutorials":       "Guides",
+	"learn":           "Guides",
+	"examples":        "Guides",
+	"getting-started": "Getting Started",
+	"quickstart":      "Getting Started",
+	"installation":    "Getting Started",
+	"install":         "Getting Started",
+	"configuration":   "Configuration",
+	"config":          "Configuration",
+	"about":           "About",
+	"team":            "About",
+	"contact":         "About",
+	"company":         "About",
+	"changelog":       "Changelog",
+	"releases":        "Changelog",
+	"updates":         "Changelog",
+	"pricing":         "Pricing",
+	"plans":           "Pricing",
+	"help":            "Support",
+	"support":         "Support",
+	"faq":             "Support",
+	"troubleshooting": "Support",
+	"products":        "Products",
+	"product":         "Products",
+	"download":        "Downloads",
+	"downloads":       "Downloads",
+	"community":       "Community",
+	"forum":           "Community",
+	"forums":          "Community",
+	"use-cases":       "Case Studies",
+	"usecases":        "Case Studies",
+	"customers":       "Case Studies",
+	"case-studies":    "Case Studies",
+	"legal":           "Legal",
+	"privacy":         "Legal",
+	"terms":           "Legal",
+	"careers":         "Careers",
+	"jobs":            "Careers",
 }
